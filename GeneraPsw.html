@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePass Generator | Ciberseguridad Empresarial</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2A2F4F;
+            --secondary: #917FB3;
+            --background: #FDE2F3;
+            --text: #2A2F4F;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+        }
+
+        [data-theme="dark"] {
+            --primary: #2A2F4F;
+            --background: #0F0F0F;
+            --text: #E5BEEC;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            transition: all 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--primary);
+            font-size: 2.5rem;
+        }
+
+        .password-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        #password {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            font-size: 1.2rem;
+            background: transparent;
+            color: var(--text);
+        }
+
+        #copyBtn {
+            padding: 0 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #copyBtn:hover {
+            transform: scale(1.05);
+        }
+
+        .strength-meter {
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+            width: 0;
+            transition: all 0.3s ease;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .gradient-btn {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+
+        .gradient-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .tips {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-moon"></i>
+    </div>
+    
+    <div class="container">
+        <h1>🔒 SecurePass Generator</h1>
+        
+        <div class="password-box">
+            <input type="text" id="password" readonly>
+            <button id="copyBtn" aria-label="Copiar contraseña">
+                <i class="fas fa-copy"></i>
+            </button>
+        </div>
+        
+        <div class="strength-meter">
+            <div class="bar"></div>
+        </div>
+        
+        <div class="options">
+            <div class="option-group">
+                <input type="range" id="length" min="8" max="64" value="12">
+                <span id="lengthValue">12</span>
+            </div>
+            <div class="option-group">
+                <input type="checkbox" id="uppercase" checked>
+                <label for="uppercase">Mayúsculas (A-Z)</label>
+            </div>
+            <div class="option-group">
+                <input type="checkbox" id="lowercase" checked>
+                <label for="lowercase">Minúsculas (a-z)</label>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" id="numbers" checked>
+                <label for="numbers">Números (0-9)</label>
+            </div>
+            <div class="option-group">
+                <input type="checkbox" id="symbols">
+                <label for="symbols">Símbolos (!@#$%^&*)</label>
+            </div>
+        </div>
+        
+        <button id="generateBtn" class="gradient-btn">Generar Contraseña Segura</button>
+        
+        <div class="tips">
+            <p>🔐 Recomendación: Usa contraseñas de al menos 12 caracteres y combina diferentes tipos de caracteres.</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuración inicial
+        const chars = {
+            uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+            lowercase: 'abcdefghijklmnopqrstuvwxyz',
+            numbers: '0123456789',
+            symbols: '!@#$%^&*()_+-=[]{}|;:,.<>?'
+        };
+
+        // Elementos del DOM
+        const passwordField = document.getElementById('password');
+        const generateBtn = document.getElementById('generateBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const lengthSlider = document.getElementById('length');
+        const lengthValue = document.getElementById('lengthValue');
+        const strengthBar = document.querySelector('.bar');
+
+        // Generar contraseña segura usando crypto API
+        function generatePassword() {
+            const length = parseInt(lengthSlider.value);
+            const options = {
+                uppercase: document.getElementById('uppercase').checked,
+                lowercase: document.getElementById('lowercase').checked,
+                numbers: document.getElementById('numbers').checked,
+                symbols: document.getElementById('symbols').checked
+            };
+
+            // Validar opciones seleccionadas
+            const selectedOptions = Object.values(options).filter(v => v);
+            if (selectedOptions.length < 1) {
+                alert('¡Selecciona al menos un tipo de carácter!');
+                return;
+            }
+
+            // Crear conjunto de caracteres
+            let charSet = '';
+            Object.keys(options).forEach(key => {
+                if (options[key]) charSet += chars[key];
+            });
+
+            // Generar bytes seguros
+            const buffer = new Uint32Array(length);
+            window.crypto.getRandomValues(buffer);
+            
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                password += charSet[buffer[i] % charSet.length];
+            }
+
+            // Validar contraseñas comunes
+            if (isCommonPassword(password)) {
+                return generatePassword(); // Regenerar si es común
+            }
+
+            updateStrengthIndicator(password);
+            return password;
+        }
+
+        // Actualizar indicador de fortaleza
+        function updateStrengthIndicator(password) {
+            const strength = calculatePasswordStrength(password);
+            strengthBar.style.width = `${strength.percentage}%`;
+            strengthBar.style.backgroundColor = strength.color;
+        }
+
+        // Calcular fortaleza de la contraseña
+        function calculatePasswordStrength(password) {
+            const entropy = password.length * Math.log2([...new Set(password)].length);
+            let percentage = Math.min(100, (entropy / 128) * 100);
+            
+            return {
+                percentage,
+                color: entropy > 100 ? '#28a745' : 
+                       entropy > 60 ? '#ffc107' : 
+                       '#dc3545'
+            };
+        }
+
+        // Validar contraseñas comunes
+        const commonPasswords = new Set(['123456', 'password', 'qwerty', '111111']);
+        function isCommonPassword(pass) {
+            return commonPasswords.has(pass.toLowerCase());
+        }
+
+        // Event Listeners
+        generateBtn.addEventListener('click', () => {
+            passwordField.value = generatePassword();
+        });
+
+        copyBtn.addEventListener('click', () => {
+            if (!passwordField.value) return;
+            
+            navigator.clipboard.writeText(passwordField.value).then(() => {
+                copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                }, 2000);
+            });
+        });
+
+        lengthSlider.addEventListener('input', () => {
+            lengthValue.textContent = lengthSlider.value;
+        });
+
+        // Tema oscuro/claro
+        function toggleTheme() {
+            document.body.setAttribute('data-theme',
+                document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'
+            );
+            document.querySelector('.fa-moon').classList.toggle('fa-sun');
+        }
+
+        // Generar contraseña inicial al cargar
+        window.onload = generateBtn.click;
+    </script>
+</body>
+</html>
